@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusFlow | Social Network Completo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f0f0f;
+            color: white;
+            overflow: hidden;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .story-ring {
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        }
+
+        /* Animations */
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-animate {
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .heart-pop {
+            animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+
+        #story-progress {
+            transition: width 0.1s linear;
+        }
+
+        .glow-button {
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.4);
+        }
+
+        .page-view {
+            display: none;
+            height: 100%;
+        }
+
+        .page-view.active {
+            display: block;
+        }
+
+        .glow-publish {
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-[#0f0f0f] h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="shrink-0 bg-[#0f0f0f]/80 backdrop-blur-md border-b border-white/5 px-6 py-4 flex justify-between items-center z-40">
+        <div class="flex items-center gap-2">
+            <i class="fab fa-youtube text-red-600 text-2xl"></i>
+            <span class="text-sm font-extrabold tracking-tighter uppercase">NexusFlow</span>
+        </div>
+        <div class="flex items-center gap-5">
+            <i class="far fa-bell text-lg cursor-pointer hover:text-red-500 transition-colors"></i>
+            <div onclick="showPage('profile')" class="w-8 h-8 rounded-full border border-white/20 overflow-hidden cursor-pointer">
+                <img id="header-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nexus" alt="Profilo">
+            </div>
+        </div>
+    </header>
+
+    <!-- Content Area -->
+    <div class="flex-1 overflow-hidden relative">
+        
+        <!-- HOME PAGE -->
+        <section id="home-page" class="page-view active overflow-y-auto no-scrollbar pb-24">
+            <!-- Barra Storie -->
+            <div id="stories-container" class="flex gap-4 px-6 py-6 overflow-x-auto no-scrollbar">
+                <div class="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer" onclick="toggleCreateModal()">
+                    <div class="w-16 h-16 rounded-full border-2 border-dashed border-zinc-700 flex items-center justify-center hover:border-red-500 transition-colors">
+                        <i class="fas fa-plus text-zinc-500"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-zinc-500">Tu</span>
+                </div>
+                <!-- Storie rimosse per pulizia -->
+            </div>
+
+            <!-- Feed -->
+            <div id="feed" class="space-y-8 px-4 max-w-lg mx-auto">
+                <!-- Post rimosso per pulizia -->
+                <div id="empty-feed-msg" class="text-center py-20">
+                    <i class="fas fa-layer-group text-4xl text-zinc-800 mb-4"></i>
+                    <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Nessun contenuto. Crea il primo!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROFILE PAGE -->
+        <section id="profile-page" class="page-view overflow-y-auto no-scrollbar pb-24">
+            <div class="max-w-lg mx-auto p-6 text-center">
+                <div class="relative inline-block mt-4">
+                    <div class="w-28 h-28 rounded-[2.5rem] border-4 border-red-600/20 overflow-hidden bg-zinc-900">
+                        <img id="profile-img-display" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nexus" class="w-full h-full object-cover">
+                    </div>
+                    <button onclick="triggerAvatarChange()" class="absolute bottom-0 right-0 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center border-4 border-[#0f0f0f]">
+                        <i class="fas fa-camera text-[10px]"></i>
+                    </button>
+                </div>
+                <h2 id="profile-name-display" class="mt-6 text-xl font-black uppercase tracking-tight">Nexus User</h2>
+                <p id="profile-bio-display" class="text-zinc-500 text-xs font-bold mt-2 max-w-[200px] mx-auto">Digital Creator & Tech Enthusiast ⚡️</p>
+                <button onclick="openEditProfile()" class="mt-6 px-8 py-2.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Modifica Profilo</button>
+                
+                <div class="grid grid-cols-3 gap-2 mt-12" id="profile-grid">
+                    <!-- Post dell'utente -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="shrink-0 bg-[#0f0f0f] border-t border-white/5 px-10 py-5 flex justify-around items-center z-40">
+        <button onclick="showPage('home')" id="btn-home" class="text-red-600 flex flex-col items-center gap-1"><i class="fas fa-home text-xl"></i><span class="text-[8px] font-bold uppercase">Home</span></button>
+        <button onclick="toggleCreateModal()" class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-transform glow-button"><i class="fas fa-plus text-xl"></i></button>
+        <button onclick="showPage('profile')" id="btn-profile" class="text-zinc-500 flex flex-col items-center gap-1"><i class="fas fa-user text-xl"></i><span class="text-[8px] font-bold uppercase">Profilo</span></button>
+    </nav>
+
+    <!-- STUDIO STORIA -->
+    <div id="create-modal" class="fixed inset-0 z-[500] bg-[#1a1a1a] hidden flex-col modal-animate">
+        <header class="p-6 flex justify-between items-center">
+            <button onclick="toggleCreateModal()" class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center"><i class="fas fa-times text-zinc-400"></i></button>
+            <span class="text-[11px] font-black uppercase tracking-[0.4em] text-zinc-400">STUDIO STORIA</span>
+            <button onclick="publishContent()" class="bg-red-500 px-8 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest glow-publish">PUBBLICA</button>
+        </header>
+        <div class="flex-1 flex flex-col items-center justify-center p-8">
+            <div id="upload-zone" class="relative w-full max-w-[320px] aspect-[9/16] rounded-[3rem] bg-zinc-800 shadow-2xl flex flex-col items-center justify-center overflow-hidden cursor-pointer" onclick="triggerUpload()">
+                <img id="preview-img" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800" class="w-full h-full object-cover">
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="w-[85%] h-[60%] border-2 border-indigo-400/40 rounded-[2rem]"></div>
+                </div>
+                <div class="absolute bottom-10 left-0 w-full px-8">
+                    <input id="post-title" type="text" placeholder="Titolo storia..." class="w-full bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 outline-none text-white text-sm font-bold">
+                </div>
+            </div>
+        </div>
+        <input type="file" id="hidden-file-input" class="hidden" accept="image/*" onchange="handleFile(this)">
+    </div>
+
+    <!-- MODIFICA PROFILO -->
+    <div id="edit-profile-modal" class="fixed inset-0 z-[600] bg-[#0f0f0f] hidden flex-col modal-animate">
+        <header class="p-6 flex justify-between items-center border-b border-white/5">
+            <button onclick="closeEditProfile()" class="text-xs font-bold text-zinc-500">Annulla</button>
+            <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Profilo</span>
+            <button onclick="saveProfile()" class="text-xs font-bold text-red-600 uppercase">Salva</button>
+        </header>
+        <div class="p-8 space-y-6">
+            <div>
+                <label class="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-2">Nome</label>
+                <input id="edit-name" type="text" class="w-full bg-zinc-900 border border-white/5 rounded-2xl p-4 mt-2 outline-none focus:border-red-600 font-bold">
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-2">Bio</label>
+                <textarea id="edit-bio" class="w-full bg-zinc-900 border border-white/5 rounded-2xl p-4 mt-2 outline-none focus:border-red-600 font-bold h-32"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- STORY VIEWER -->
+    <div id="story-viewer" class="fixed inset-0 z-[700] bg-black hidden flex-col items-center justify-center">
+        <div class="absolute top-0 left-0 w-full h-1 bg-white/20 z-[710]"><div id="story-progress" class="h-full bg-white w-0"></div></div>
+        <button onclick="closeStory()" class="absolute top-8 right-6 z-[710] text-white"><i class="fas fa-times text-2xl"></i></button>
+        <img id="story-img" src="" class="h-full w-full object-cover md:max-w-md md:rounded-3xl">
+    </div>
+
+    <script>
+        function showPage(pageId) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId + '-page').classList.add('active');
+            const home = document.getElementById('btn-home');
+            const prof = document.getElementById('btn-profile');
+            if(pageId === 'home') { home.classList.add('text-red-600'); prof.classList.replace('text-red-600','text-zinc-500'); }
+            else { prof.classList.add('text-red-600'); home.classList.replace('text-red-600','text-zinc-500'); }
+        }
+
+        function toggleCreateModal() {
+            const m = document.getElementById('create-modal');
+            m.classList.toggle('hidden');
+            m.classList.toggle('flex');
+        }
+
+        function triggerUpload() { document.getElementById('hidden-file-input').click(); }
+
+        function handleFile(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => { document.getElementById('preview-img').src = e.target.result; }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function publishContent() {
+            const title = document.getElementById('post-title').value || "Nuova Storia";
+            const img = document.getElementById('preview-img').src;
+            const avatar = document.getElementById('header-avatar').src;
+
+            // Rimuovi messaggio vuoto se presente
+            const emptyMsg = document.getElementById('empty-feed-msg');
+            if(emptyMsg) emptyMsg.remove();
+
+            // 1. Aggiungi alla Barra delle Storie
+            const storiesContainer = document.getElementById('stories-container');
+            const storyDiv = document.createElement('div');
+            storyDiv.className = 'flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer animate-slide-up';
+            storyDiv.onclick = () => openStory('Tu', img);
+            storyDiv.innerHTML = `
+                <div class="w-16 h-16 rounded-full p-[3px] story-ring">
+                    <div class="w-full h-full rounded-full border-2 border-[#0f0f0f] overflow-hidden bg-zinc-900">
+                        <img src="${img}" class="w-full h-full object-cover">
+                    </div>
+                </div>
+                <span class="text-[10px] font-bold text-zinc-400 text-center truncate w-16">Tu</span>
+            `;
+            storiesContainer.appendChild(storyDiv);
+
+            // 2. Aggiungi al Feed come Post
+            const feed = document.getElementById('feed');
+            const article = document.createElement('article');
+            article.className = 'post-container animate-slide-up mb-8';
+            article.innerHTML = `
+                <div class="relative aspect-video rounded-3xl overflow-hidden shadow-2xl bg-zinc-900">
+                    <img src="${img}" class="w-full h-full object-cover">
+                </div>
+                <div class="mt-4 flex justify-between items-start px-2">
+                    <div class="flex gap-3">
+                        <img src="${avatar}" class="w-10 h-10 rounded-2xl bg-zinc-800">
+                        <div><h3 class="text-sm font-bold">${title}</h3><p class="text-[10px] text-zinc-500 font-bold">Tu • Proprio ora</p></div>
+                    </div>
+                </div>
+            `;
+            feed.prepend(article);
+
+            // 3. Aggiungi alla Griglia del Profilo
+            const grid = document.getElementById('profile-grid');
+            const gridItem = document.createElement('div');
+            gridItem.className = 'aspect-square rounded-2xl bg-zinc-900 overflow-hidden border border-white/5 animate-slide-up';
+            gridItem.innerHTML = `<img src="${img}" class="w-full h-full object-cover">`;
+            grid.prepend(gridItem);
+
+            toggleCreateModal();
+            showPage('home');
+        }
+
+        function openEditProfile() {
+            document.getElementById('edit-name').value = document.getElementById('profile-name-display').innerText;
+            document.getElementById('edit-bio').value = document.getElementById('profile-bio-display').innerText;
+            document.getElementById('edit-profile-modal').classList.remove('hidden');
+        }
+
+        function closeEditProfile() { document.getElementById('edit-profile-modal').classList.add('hidden'); }
+
+        function saveProfile() {
+            document.getElementById('profile-name-display').innerText = document.getElementById('edit-name').value;
+            document.getElementById('profile-bio-display').innerText = document.getElementById('edit-bio').value;
+            closeEditProfile();
+        }
+
+        function triggerAvatarChange() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = (e) => {
+                const reader = new FileReader();
+                reader.onload = (re) => {
+                    document.getElementById('profile-img-display').src = re.target.result;
+                    document.getElementById('header-avatar').src = re.target.result;
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            };
+            input.click();
+        }
+
+        let storyTimer;
+        function openStory(user, img) {
+            const viewer = document.getElementById('story-viewer');
+            document.getElementById('story-img').src = img;
+            viewer.classList.remove('hidden'); viewer.classList.add('flex');
+            let w = 0;
+            clearInterval(storyTimer);
+            storyTimer = setInterval(() => {
+                if (w >= 100) closeStory();
+                else { w += 1; document.getElementById('story-progress').style.width = w + '%'; }
+            }, 40);
+        }
+
+        function closeStory() {
+            clearInterval(storyTimer);
+            document.getElementById('story-viewer').classList.add('hidden');
+            document.getElementById('story-progress').style.width = '0%';
+        }
+
+        function handleLike(btn) {
+            btn.classList.toggle('text-red-600');
+            const span = btn.querySelector('span');
+            span.innerText = parseInt(span.innerText) + (btn.classList.contains('text-red-600') ? 1 : -1);
+        }
+    </script>
+</body>
+</html>
